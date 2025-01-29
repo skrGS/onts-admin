@@ -1,7 +1,7 @@
 import { HttpRequest } from "@/utils/request";
 
-const appHttpRequest = new HttpRequest(null, `http://localhost:3011`);
-// const appHttpRequest = new HttpRequest(null, `https://onts.boosters.mn`);
+// const appHttpRequest = new HttpRequest(null, `http://localhost:3011`);
+const appHttpRequest = new HttpRequest(null, `https://onts.boosters.mn`);
 
 export const getUsers = async () => {
   const res = await appHttpRequest.get("/users");

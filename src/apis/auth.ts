@@ -2,8 +2,8 @@ import { store } from "@/store";
 import { authMe, setToken } from "@/store/auth-slice";
 import { HttpRequest } from "@/utils/request";
 
-const appHttpRequest = new HttpRequest(null, `http://localhost:3011/user`);
-// const appHttpRequest = new HttpRequest(null, `https://onts.boosters.mn`);
+// const appHttpRequest = new HttpRequest(null, `http://localhost:3011/user`);
+const appHttpRequest = new HttpRequest(null, `https://onts.boosters.mn/user`);
 
 export const me = async () => {
   const res = await appHttpRequest.get("/me");
