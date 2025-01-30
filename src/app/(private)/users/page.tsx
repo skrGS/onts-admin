@@ -9,6 +9,7 @@ import ConfirmModal from "@/components/modal/confirm-modal";
 import { useForm } from "react-hook-form";
 import UserEditModal from "@/components/modal/user-edit-modal";
 import AdminAddModal from "@/components/modal/admin-add-modal";
+import { title } from "process";
 
 export interface IUser {
   phone: string;
@@ -240,6 +241,11 @@ const Page = () => {
       title: "Анги",
       dataIndex: "classes",
       key: "classes",
+    },
+    {
+      title:"Хичээл",
+      dataIndex: "lesson",
+      key: "lesson"
     },
     {
       title: "Төлбөр",
