@@ -329,7 +329,9 @@ const Page = () => {
   
   return (
     <div className="flex flex-col w-full p-4">
-      <Card bordered={false} title="Хэрэглэгчид" 
+      <Card 
+      bordered={false}
+      title="Хэрэглэгчид" 
       // extra={addbutton}
       >
         {renderFilterForm()}
