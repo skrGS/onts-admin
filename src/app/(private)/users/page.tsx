@@ -2,12 +2,13 @@
 import { userApi} from "@/apis";
 import { message } from "@/utils/toast";
 import useSWR from "swr";
-import { Table, Spin, Card, Button, Form, Input,  Select, Alert, Tag } from "antd";
-import {  MoneyCollectTwoTone, EditTwoTone, DeleteTwoTone } from "@ant-design/icons";
+import { Table, Spin, Card, Button, Form, Input,  Select, Alert, Tag,  } from "antd";
+import {  MoneyCollectTwoTone, EditTwoTone, DeleteTwoTone, PlusOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import ConfirmModal from "@/components/modal/confirm-modal";
 import { useForm } from "react-hook-form";
 import UserEditModal from "@/components/modal/user-edit-modal";
+import AdminAddModal from "@/components/modal/admin-add-modal";
 
 export interface IUser {
   phone: string;
@@ -28,6 +29,12 @@ export interface IUser {
   registerNumber: string;
 };
 
+export type IAdmin = {
+  phone: string;
+  password: string;
+  cPassword: string;
+}
+
 
 
 const Page = () => {
@@ -38,6 +45,7 @@ const Page = () => {
   const [searchRegister, setSearchRegister] = useState<string>("")
   const [selectCity, setSelectCity] = useState<string | undefined>(undefined);
   const [selectPayment, setSelectPayment] = useState<boolean | undefined>(undefined);
+  const [adminModal, setAdminModal] = useState<boolean>(false)
   const [page,setPage] = useState(1)
   const { data: userData, isLoading: isUserLoading, error: userError, mutate } = useSWR<
   {users:IUser[], total: number, totalPages:number, currentPage: number}
@@ -96,6 +104,11 @@ const Page = () => {
       _id: "",
     },
   });
+  const {
+    handleSubmit: adminHandleSubmit,
+    formState: { errors: adminErrors },
+    control: adminControl,
+  } = useForm<IAdmin>();
 
   const handleEditClick = (user: IUser) => {
     setCurrentUser(user);
@@ -147,6 +160,17 @@ const Page = () => {
         message.error(err.error?.message || "Серверийн алдаа!")
       }
   }
+  const handleAdminAdd = async (data: IAdmin) => {
+      try{
+        await userApi.addAdmin({data})
+        message.success("Админ амжилттай нэмэгдлээ");
+        setIsEditModalVisible(false)
+        setCurrentUser(null)
+        setTimeout(() => mutate(), 500)
+      } catch(err: any){
+        message.error(err.error?.message || "Серверийн алдаа!")
+      }
+  }
 
   const handleAcceptPayment = async () => {
     if(currentUser){
@@ -166,8 +190,14 @@ const Page = () => {
     setIsModalVisible(false);
     setCurrentUser(null);
     setIsEditModalVisible(false);
-    setDeleteModal(false)
   };
+
+  const addbutton = (
+    <Button type="primary" icon={<PlusOutlined />} className="rounded-md" onClick={() => setAdminModal(true)}>
+      Нэмэх
+    </Button>
+  );
+
 
   const columns = [
     {
@@ -299,7 +329,9 @@ const Page = () => {
   
   return (
     <div className="flex flex-col w-full p-4">
-      <Card bordered={false} title="Хэрэглэгчид">
+      <Card bordered={false} title="Хэрэглэгчид" 
+      // extra={addbutton}
+      >
         {renderFilterForm()}
         <br />
         <Alert
@@ -343,6 +375,14 @@ const Page = () => {
       handleSubmit={handleSubmit}    
       errors={errors}  
       control={control}
+      />
+      <AdminAddModal
+      onCancel={() => setDeleteModal(false)}
+      onOk={handleAdminAdd}
+      visible={adminModal}
+      handleSubmit={adminHandleSubmit}    
+      errors={adminErrors}  
+      control={adminControl}
       />
       <ConfirmModal
       onCancel={handleModalCancel}

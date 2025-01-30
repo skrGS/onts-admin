@@ -1,3 +1,4 @@
+import { IAdmin } from "@/app/(private)/users/page";
 import { HttpRequest } from "@/utils/request";
 
 // const appHttpRequest = new HttpRequest(null, `http://localhost:3011`);
@@ -20,6 +21,11 @@ export const userEdit = async (id: string, data: {
   phone: string
 }) => {
   const res = await appHttpRequest.post(`/user/update/${id}`, data);
+  return res;
+}
+
+export const addAdmin = async ({data}: {data: IAdmin}) => {
+  const res=  await appHttpRequest.post("/user/register", data);
   return res;
 }
 

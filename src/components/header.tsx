@@ -37,8 +37,7 @@ export function Header() {
   );
 
   const userNavigation = [
-    { name: "Your profile", href: "#" },
-    { name: "Sign out", onClick: logOut },
+    { name: "Гарах", onClick: logOut },
   ];
 
   return (
@@ -85,21 +84,12 @@ export function Header() {
             >
               {userNavigation.map((item) => (
                 <MenuItem key={item.name}>
-                  {item.href ? (
-                    <a
-                      href={item.href}
-                      className="block px-3 py-1 text-sm leading-6 text-gray-900 data-[focus]:bg-gray-50"
-                    >
-                      {item.name}
-                    </a>
-                  ) : (
                     <button
                       onClick={item.onClick}
                       className="block w-full text-left px-3 py-1 text-sm leading-6 text-gray-900 data-[focus]:bg-gray-50"
                     >
                       {item.name}
                     </button>
-                  )}
                 </MenuItem>
               ))}
             </MenuItems>
