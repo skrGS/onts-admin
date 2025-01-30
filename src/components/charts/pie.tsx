@@ -13,19 +13,15 @@ import {
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, Title, Legend, Tooltip ,PointElement,ArcElement);
 
-const PieChart = () => {
+const PieChart = ({success, unsucess}: {success: number, unsucess: number}) => {
 	const data = {
-		labels: ['Africa', 'Asia', 'Europe', 'North America', 'Oceania', 'South America'],
+		labels: ['Төлсөн', 'Төлөөгүй'],
 		datasets: [
 		  {
-			data: [16, 59, 9.8, 7.6, 0.5, 6.5], // Example data: population percentages
+			data: [success, unsucess], // Example data: population percentages
 			backgroundColor: [
-			  '#3e95cd', // Africa
-			  '#8e5ea2', // Asia
-			  '#3cba9f', // Europe
-			  '#e8c3b9', // North America
-			  '#c45850', // Oceania
-			  '#FFCE56', // South America
+			  '#3cba9f', // Success
+			  '#c45850', // UnSuccess
 			],
 			borderColor: '#fff',
 			borderWidth: 1,

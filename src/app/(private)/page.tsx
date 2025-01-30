@@ -1,8 +1,6 @@
 "use client";
 
 import { adminApi } from "@/apis";
-import { BarChart } from "@/components/charts/bar";
-import { LineChart } from "@/components/charts/line";
 import PieChart from "@/components/charts/pie";
 import Loading from "@/components/ui/loading";
 import useSWR from "swr";
@@ -12,12 +10,9 @@ export default function RootPage() {
     const res = adminApi.getDashboard();
     return res;
   })
-  const {data:chart, isLoading: chartLoading} = useSWR("swr.dashboard.chart", async () => {
-    const res=  adminApi.getChartDashboard();
-    return res;
-  })
 
-  if(isLoading || chartLoading){
+
+  if(isLoading ){
     return <Loading/>
   }
   return (
@@ -39,10 +34,10 @@ export default function RootPage() {
       {/* <div>
         <LineChart />
         </div> */}
-      {/* <div className="grid grid-cols-2 gap-6">
-        <BarChart />
-        <PieChart />
-      </div> */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* <BarChart /> */}
+        <PieChart success={data?.successPayment} unsucess={data?.unsuccessPayment} />
+      </div>
     </div>
   );
 }

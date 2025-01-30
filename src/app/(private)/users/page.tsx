@@ -2,15 +2,21 @@
 import { userApi} from "@/apis";
 import { message } from "@/utils/toast";
 import useSWR from "swr";
-import { Table, Spin, Card, Button, Form, Input,  Select, Alert,  Tag } from "antd";
-import {  MoneyCollectTwoTone } from "@ant-design/icons";
+import { Table, Spin, Card, Button, Form, Input,  Select, Alert, Tag } from "antd";
+import {  MoneyCollectTwoTone, EditTwoTone, DeleteTwoTone } from "@ant-design/icons";
 import { useState } from "react";
 import ConfirmModal from "@/components/modal/confirm-modal";
+import { useForm } from "react-hook-form";
+import UserEditModal from "@/components/modal/user-edit-modal";
 
 export interface IUser {
   phone: string;
-  tier: string;
   role: string;
+  firstName: string;
+  lastName: string;
+  district: string;
+  lesson: string;
+  level: string;
   spentAmount: number;
   _id: string;
   city: string;
@@ -20,14 +26,54 @@ export interface IUser {
     amount: number;
   };
   registerNumber: string;
-}
+};
+
+export const allCity = [
+  "Улаанбаатар хот",
+  "Архангай аймаг",
+  "Баян-Өлгий аймаг",
+  "Баянхонгор аймаг",
+  "Булган аймаг",
+  "Говь-Алтай",
+  "Говьсүмбэр аймаг",
+  "Дархан-Уул аймаг",
+  "Дорноговь аймаг",
+  "Дорнод аймаг",
+  "Дундговь аймаг",
+  "Завхан аймаг",
+  "Орхон аймаг",
+  "Өвөрхангай аймаг",
+  "Өмнөговь аймаг",
+  "Сүхбаатар аймаг",
+  "Сэлэнгэ аймаг",
+  "Төв аймаг",
+  "Увс аймаг",
+  "Ховд аймаг",
+  "Хөвсгөл аймаг",
+  "Хэнтий аймаг",
+]
 
 const Page = () => {
-  const { data: userData, isLoading: isUserLoading, error: userError, mutate } = useSWR<IUser[]>(
-    `swr.user.list`,
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [deleteModal, setDeleteModal] = useState<boolean>(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<IUser | null>(null);
+  const [searchRegister, setSearchRegister] = useState<string>("")
+  const [selectCity, setSelectCity] = useState<string | undefined>(undefined);
+  const [selectPayment, setSelectPayment] = useState<boolean | undefined>(undefined);
+  const [page,setPage] = useState(1)
+  const { data: userData, isLoading: isUserLoading, error: userError, mutate } = useSWR<
+  {users:IUser[], total: number, totalPages:number, currentPage: number}
+  >(
+    `swr.user.list.${page}.${selectPayment}.${selectCity}.${searchRegister}`,
     async () => {
       try {
-        const res = await userApi.getUsers();
+        const res = await userApi.getUsers({
+          page,
+          city: selectCity,
+          registerNumber: searchRegister,
+          isPayment: selectPayment,
+        });
         return res;
       } catch (err: any) {
         message.error(err.message || "Failed to fetch users");
@@ -36,17 +82,71 @@ const Page = () => {
     }
   );
 
-  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<IUser | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [searchRegister, setSearchRegister] = useState<string>("")
-  const [selectCity, setSelectCity] = useState<string | undefined>(undefined);
-  const [selectPayment, setSelectPayment] = useState<boolean | undefined>(undefined);
+  const {
+    handleSubmit,
+    formState: { errors },
+    control,
+    setValue
+  } = useForm<IUser>({
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      registerNumber: "",
+      _id: "",
+    },
+  });
 
   const handleEditClick = (user: IUser) => {
     setCurrentUser(user);
     setIsModalVisible(true);
   };
+
+  const handleUserClick = (user: IUser) => {
+    setValue("firstName", user.firstName)
+    setValue("lastName", user.lastName)
+    setValue("phone", user.phone)
+    setValue("registerNumber", user.registerNumber)
+    setValue("_id", user._id)
+    setIsEditModalVisible(true)
+  }
+
+  const handleDeleteClick = (user: IUser) => {
+    setCurrentUser(user);
+    setDeleteModal(true);
+  }
+
+  const handleUserDelete = async () => {
+    if(currentUser){
+      try{
+        await userApi.userDelete(currentUser._id);
+        message.success("Хэрэглэгчийг амжилттай устгалаа");
+        setDeleteModal(false)
+        setCurrentUser(null);
+        setTimeout(() => mutate(), 500)
+      } catch(err:any){
+        message.error(err.error?.message || "Серверийн алдаа!")
+      }
+    }
+  }
+
+  const handleUserEdit = async (data: IUser) => {
+    const newData=  {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      registerNumber: data.registerNumber,
+      phone: data.phone
+    }
+      try{
+        await userApi.userEdit(data._id, newData)
+        message.success("Хэрэглэгчийн мэдээлэл амжилттай шинэчлэгдлээ");
+        setIsEditModalVisible(false)
+        setCurrentUser(null)
+        setTimeout(() => mutate(), 500)
+      } catch(err: any){
+        message.error(err.error?.message || "Серверийн алдаа!")
+      }
+  }
 
   const handleAcceptPayment = async () => {
     if(currentUser){
@@ -65,6 +165,8 @@ const Page = () => {
   const handleModalCancel = () => {
     setIsModalVisible(false);
     setCurrentUser(null);
+    setIsEditModalVisible(false);
+    setDeleteModal(false)
   };
 
   const columns = [
@@ -132,35 +234,20 @@ const Page = () => {
         :
         null
       }
+      <Button
+      type="link"
+      icon={<EditTwoTone/>}
+      onClick={() => handleUserClick(record)}
+      />
+      <Button
+      type="link"
+      icon={<DeleteTwoTone/>}
+      onClick={() => handleDeleteClick(record)}
+      />
         </div>
       ),
     },
   ];
-
-  const allCity = Array.from(
-    new Set(
-      userData?.flatMap((user) => user.city || []).map((p) => p.trim())
-    )
-  );
-
-  const filteredData = userData?.filter(user => {
-    const matchesRoleName = user.phone?.includes(searchTerm.toLowerCase());
-    const matchesRegister = user.registerNumber?.includes(searchRegister.toUpperCase());
-    const matchesPermission = selectCity
-      ? user.city && user.city?.includes(selectCity)
-      : true;
-      const matchesPayment = selectPayment !== undefined ? user.wallet?.isPayment === selectPayment : true;
-
-    return matchesRoleName && matchesPermission && matchesPayment && matchesRegister
-  }) || [];
-
-  if (isUserLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spin tip="Loading..." />
-      </div>
-    );
-  }
 
   if (userError) {
     return <div className="text-red-500">Error: {userError.message}</div>;
@@ -169,14 +256,7 @@ const Page = () => {
   const renderFilterForm = () => (
     <div className="flex justify-between items-center w-full">
       <Form layout="inline">
-        {/* <Form.Item label="Утасны дугаар" name="phone">
-          <Input.Search
-            placeholder="Утасны дугаар"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            enterButton
-          />
-        </Form.Item> */}
+   
         <Form.Item label="Регистр	" name="registerNumber">
           <Input.Search
             placeholder="Регистр"
@@ -217,7 +297,6 @@ const Page = () => {
     </div>
   );
   
-
   return (
     <div className="flex flex-col w-full p-4">
       <Card bordered={false} title="Хэрэглэгчид">
@@ -226,21 +305,54 @@ const Page = () => {
         <Alert
           message={
             <p className="mb-0">
-              Нийт тоо: <b>{filteredData.length || 0}</b>
+              Нийт тоо: <b>{userData?.total || 0}</b>
             </p>
           }
           type="info"
           className="mb-4"
         />
+        {isUserLoading ? 
+       <div className="flex justify-center items-center h-screen">
+       <Spin tip="Loading..." />
+     </div>
+     :  
         <div className="overflow-x-auto">
-        <Table dataSource={filteredData} columns={columns} rowKey="_id" pagination={{ pageSize: 10 }} />
+        <Table 
+        dataSource={userData?.users}
+         columns={columns}
+          rowKey="_id" 
+         pagination={{
+           current: userData?.currentPage,
+           pageSize:10,
+           onChange: (page) => setPage(page),
+           total: userData?.total
+         }} />
         </div>
+        }
       </Card>
       <ConfirmModal
       onCancel={handleModalCancel}
       onOk={handleAcceptPayment}
       visible={isModalVisible}
       user={currentUser}
+      />
+      <UserEditModal
+      onCancel={handleModalCancel}
+      onOk={handleUserEdit}
+      visible={isEditModalVisible}
+      handleSubmit={handleSubmit}    
+      errors={errors}  
+      control={control}
+      />
+      <ConfirmModal
+      onCancel={handleModalCancel}
+      onOk={handleUserDelete}
+      visible={deleteModal}
+      user={currentUser}
+      description="Тухайн хэрэглэгчийн мэдээлэл дахин сэргээгдэхгүйг анхаарна уу!"
+      title="Хэрэглэгч устгах"
+      okText="Устгах"
+      type="error"
       />
     </div>
   );
