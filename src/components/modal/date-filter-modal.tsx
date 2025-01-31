@@ -17,16 +17,18 @@ type Props = {
   onCancel: () => void;
   handleSubmit: any;
   control: Control<IExcelDateForm, any>;
-  errors: FieldErrors<IExcelDateForm>
+  errors: FieldErrors<IExcelDateForm>;
+  loading:boolean
 }
 
-const DateFilterModal = ({onCancel, onOk,visible, handleSubmit,control, errors }: Props) => {
+const DateFilterModal = ({onCancel, onOk,visible, handleSubmit,control, errors,loading }: Props) => {
   return (
     <Modal
     title="Excel хөрвүүлэх"
     visible={visible}
     okText="Татах"
     cancelText="Болих"
+    confirmLoading={loading}
     onOk={handleSubmit(onOk)}
     onCancel={onCancel}
   >

@@ -489,6 +489,7 @@ const Page = () => {
       handleSubmit={dateHandleSubmit}    
       errors={dateErrors}  
       control={dateControl}
+      loading={loading}
       />
       <AdminAddModal
       onCancel={() => setDeleteModal(false)}
