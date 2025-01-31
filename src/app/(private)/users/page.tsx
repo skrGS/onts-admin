@@ -120,6 +120,7 @@ const Page = () => {
     defaultValues: {
       startDate: "",
       endDate: "",
+      isPayment: null,
     },
   });
   const {
@@ -164,7 +165,7 @@ const Page = () => {
   const handleConvertUsers = async (data: IExcelDateForm) => {
     setLoading(true)
     try{
-      const res = await adminApi.convertExcelByUser(data.startDate, data.endDate);
+      const res = await adminApi.convertExcelByUser(data.startDate, data.endDate, data.isPayment);
       
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Users");

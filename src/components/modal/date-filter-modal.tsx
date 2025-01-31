@@ -1,13 +1,14 @@
 "use client";
 
 import React from 'react'
-import {  Form,  Modal,   Divider } from "antd";
+import {  Form,  Modal,   Divider, Select } from "antd";
 import { Control, Controller, FieldErrors } from 'react-hook-form';
 import { TextInput } from '@mantine/core';
 
 export type IExcelDateForm = {
   startDate: string;
   endDate: string;
+  isPayment: boolean | null;
 }
 
 type Props = {
@@ -66,6 +67,29 @@ const DateFilterModal = ({onCancel, onOk,visible, handleSubmit,control, errors }
             }}
             error={errors?.startDate?.message}
             />
+          )}
+          />
+          <Controller
+          name='isPayment'
+          control={control}
+          render={({field}) => (
+            <div className='mt-4'>
+            <Form.Item label="Төлбөрийн төлөв" name="isPayment">
+            <Select
+            placeholder="Төлбөрийн төлөв"
+            value={field.value}
+            className='w-full'
+            onChange={(value) => field.onChange(value)}
+            allowClear
+            >
+            {[true,false, null].map((payment, index) => (
+              <Select.Option key={index} value={payment}>
+                {payment === null ? "Бүгд" : payment ? "Төлөгдсөн" : "Төлөгдөөгүй"}
+              </Select.Option>
+            ))}
+          </Select>
+          </Form.Item>
+            </div>
           )}
           />
       </Form>
