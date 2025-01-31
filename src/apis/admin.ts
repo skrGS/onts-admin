@@ -13,3 +13,8 @@ export const getDashboard = async () => {
   const res = await appHttpRequest.get("/dashboard");
   return res;
 };
+
+export const convertExcelByUser = async (startDate?: string, endDate?: string) => {
+  const res = await appHttpRequest.get("/convert-excel", {startDate, endDate})
+  return res;
+};

@@ -108,6 +108,10 @@ export class HttpRequest {
     return this.request(api, data || {}, { method: "GET" });
   }
 
+  getExcel(api: string, data?: JSONobj) {
+    return this.request(api, data || {responseType: "blob"}, { method: "GET", });
+  }
+
   post(api: string, data?: JSONobj) {
     return this.request(api, data || {}, { method: "POST" });
   }

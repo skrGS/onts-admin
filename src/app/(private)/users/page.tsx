@@ -1,5 +1,5 @@
 "use client";
-import { userApi} from "@/apis";
+import { adminApi, userApi} from "@/apis";
 import { message } from "@/utils/toast";
 import useSWR from "swr";
 import { Table, Spin, Card, Button, Form, Input,  Select, Alert, Tag,  } from "antd";
@@ -9,8 +9,9 @@ import ConfirmModal from "@/components/modal/confirm-modal";
 import { useForm } from "react-hook-form";
 import UserEditModal from "@/components/modal/user-edit-modal";
 import AdminAddModal from "@/components/modal/admin-add-modal";
-import { title } from "process";
-
+import {format} from "date-fns"
+import ExcelJS from "exceljs"
+import DateFilterModal, { IExcelDateForm } from "@/components/modal/date-filter-modal";
 export interface IUser {
   phone: string;
   role: string;
@@ -19,6 +20,7 @@ export interface IUser {
   district: string;
   lesson: string;
   level: string;
+  emergencyPhone: string;
   spentAmount: number;
   _id: string;
   city: string;
@@ -28,6 +30,9 @@ export interface IUser {
     amount: number;
   };
   registerNumber: string;
+  classes: string;
+  createdAt: Date;
+  school: string;
 };
 
 export type IAdmin = {
@@ -46,8 +51,10 @@ const Page = () => {
   const [searchRegister, setSearchRegister] = useState<string>("")
   const [selectCity, setSelectCity] = useState<string | undefined>(undefined);
   const [selectPayment, setSelectPayment] = useState<boolean | undefined>(undefined);
-  const [adminModal, setAdminModal] = useState<boolean>(false)
-  const [page,setPage] = useState(1)
+  const [adminModal, setAdminModal] = useState<boolean>(false);
+  const [dateModal, setDateModal] = useState<boolean>(false);
+  const [page,setPage] = useState(1);
+  const [loading, setLoading] = useState(false)
   const { data: userData, isLoading: isUserLoading, error: userError, mutate } = useSWR<
   {users:IUser[], total: number, totalPages:number, currentPage: number}
   >(
@@ -106,6 +113,16 @@ const Page = () => {
     },
   });
   const {
+    handleSubmit: dateHandleSubmit,
+    formState: { errors: dateErrors },
+    control: dateControl,
+  } = useForm<IExcelDateForm>({
+    defaultValues: {
+      startDate: "",
+      endDate: "",
+    },
+  });
+  const {
     handleSubmit: adminHandleSubmit,
     formState: { errors: adminErrors },
     control: adminControl,
@@ -141,6 +158,79 @@ const Page = () => {
       } catch(err:any){
         message.error(err.error?.message || "Серверийн алдаа!")
       }
+    }
+  }
+
+  const handleConvertUsers = async (data: IExcelDateForm) => {
+    setLoading(true)
+    try{
+      const res = await adminApi.convertExcelByUser(data.startDate, data.endDate);
+      
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Users");
+      const headerRow = worksheet.getRow(1);
+      headerRow.eachCell((cell) => {
+        cell.font = {bold: true}
+      })
+      worksheet.columns = [
+        { header: "Овог", key: "lastName", width: 25 },
+        { header: "Нэр", key: "firstName", width: 25 },
+        { header: "Регистр", key: "registerNumber", width: 15 },
+        { header: "Утас", key: "phone", width: 10 },
+        { header: "Утас-2", key: "emergencyPhone", width: 10 },
+        { header: "Хот/Аймаг", key: "city", width: 18 },
+        { header: "Дүүрэг/Сум", key: "district", width: 18 },
+        { header: "Сургууль", key: "school", width: 25 },
+        { header: "Анги", key: "classes", width: 15 },
+        { header: "Хичээл", key: "lesson", width: 65 },
+        { header: "Төлбөр", key: "isPayment", width: 15 },
+        { header: "Үүсгэсэн", key: "createdAt", width: 15 },
+      ];
+      await res?.forEach((user: IUser) => {
+        const row = worksheet.addRow({
+          lastName: user.lastName,
+          firstName: user.firstName,
+          registerNumber: user.registerNumber,
+          phone: user.phone,
+          emergencyPhone: user.emergencyPhone,
+          city: user.city,
+          district: user.district,
+          school: user.school,
+          classes: user.classes,
+          lesson: user.lesson,
+          isPayment: (user.wallet as any)?.isPayment ? "Төлсөн" : "Төлөөгүй",
+          createdAt: format(new Date(user.createdAt || "0"), 'yyyy-MM-dd'),
+        });
+
+        
+  
+        const walletCell = row.getCell(11);
+        walletCell.font = {
+          color: {argb: user.wallet?.isPayment ? "00FF00": "FF0000"}
+        }
+        // walletCell.fill = {
+        //   type: "pattern",
+        //   pattern: "solid",
+        //   fgColor: { argb: user.wallet?.isPayment ? "00FF00" : "FF0000" }, // Green if true, Red if false
+        // };
+      });
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'users.xlsx'; // Name of the downloaded file
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url); // Clean up
+
+      setDateModal(false);
+      setLoading(false)
+    } catch(err:any){
+      setLoading(false)
+      message.error(err.error?.message || "Серверийн алдаа!")
     }
   }
 
@@ -332,13 +422,20 @@ const Page = () => {
       </Form>
     </div>
   );
+
+  
+  const convert = (
+    <Button type="primary" loading={loading} icon={<PlusOutlined />} className="rounded-md" onClick={() => setDateModal(true)}>
+      Excel татах
+    </Button>
+  );
   
   return (
     <div className="flex flex-col w-full p-4">
       <Card 
       bordered={false}
       title="Хэрэглэгчид" 
-      // extra={addbutton}
+      extra={convert}
       >
         {renderFilterForm()}
         <br />
@@ -384,6 +481,14 @@ const Page = () => {
       errors={errors}  
       control={control}
       />
+      <DateFilterModal
+      onCancel={() => setDateModal(!dateModal)}
+      onOk={handleConvertUsers}
+      visible={dateModal}
+      handleSubmit={dateHandleSubmit}    
+      errors={dateErrors}  
+      control={dateControl}
+      />
       <AdminAddModal
       onCancel={() => setDeleteModal(false)}
       onOk={handleAdminAdd}
@@ -402,6 +507,7 @@ const Page = () => {
       okText="Устгах"
       type="error"
       />
+    
     </div>
   );
 };
