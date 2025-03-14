@@ -2,7 +2,7 @@ import { IAdmin } from "@/app/(private)/users/page";
 import { HttpRequest } from "@/utils/request";
 
 // const appHttpRequest = new HttpRequest(null, `http://localhost:3011`);
-const appHttpRequest = new HttpRequest(null, `https://onts.boosters.mn`);
+const appHttpRequest = new HttpRequest(null, `https://noskr.boosters.mn`);
 
 export const getUsers = async ({page, city, isPayment, registerNumber}: {page: number, city?: string, isPayment?: boolean, registerNumber?: string}) => {
   const res = await appHttpRequest.get("/users", {page, city, isPayment, registerNumber});

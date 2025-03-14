@@ -464,7 +464,9 @@ const Page = () => {
            pageSize:10,
            onChange: (page) => setPage(page),
            total: userData?.total
-         }} />
+         }} 
+         
+         />
         </div>
         }
       </Card>

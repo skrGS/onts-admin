@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react'
-import {  Form,  Modal,   Divider, Select } from "antd";
+import { Form,  Modal,   Divider, Select } from "antd";
 import { Control, Controller, FieldErrors } from 'react-hook-form';
 import { TextInput } from '@mantine/core';
 

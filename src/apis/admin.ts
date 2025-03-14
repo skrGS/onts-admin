@@ -1,7 +1,7 @@
 // /admin/chart-dashboard
 import { HttpRequest } from "@/utils/request";
 
-const appHttpRequest = new HttpRequest(null, `https://onts.boosters.mn/admin`);
+const appHttpRequest = new HttpRequest(null, `https://noskr.boosters.mn/admin`);
 // const appHttpRequest = new HttpRequest(null, `http://localhost:3011/admin`);
 
 export const getChartDashboard = async () => {
